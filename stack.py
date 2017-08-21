@@ -10,13 +10,14 @@ def last():
     if ind > -1:
         print stack[ind]
 
-def show():
+def ls():
     for x in stack:
         print x
 
 def pop(size = 1):
     if len(stack) == 0:
         return []
+    size = int(size)
     res = []
     for i in range(size):
         res.append(stack.pop())
@@ -28,7 +29,8 @@ def top(ptr = 1, size = 1):
         return
 
     #length = len(stack)
-    ptr = length() - 1 - ptr
+    ptr = len(stack) - 1 - int(ptr)
+    size = int(size)
     
     #if ptr < 0 or size < 0 or (ptr + size) >= length:
         #return

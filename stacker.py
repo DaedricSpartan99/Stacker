@@ -36,42 +36,19 @@ def import_(*args):
         if callable(func):
             ext[var] = func
 
-# varargs resolvers
-
-def push_(*args):
-    if len(args) > 0:
-        stack.push(*args)
-
-def last_(*args):
-    stack.last()
-
-def show_(*args):
-    stack.show()
-
-def pop_(*args):
-    if len(args) > 0:
-        stack.pop(args[0])
-
-def top_(*args):
-    if len(args) > 1:
-        stack.top(args[0], args[1])
-
 # basic commands
 
 cmds = {"exit" : exit_,
         "import" : import_,
-        "push" : push_,
-        "show" : show_,
-        "last" : last_,
-        "pop" : pop_,
-        "top" : top_}
+        "push" : lambda *args: stack.push(*args),
+        "ls" : lambda *args: stack.ls(),
+        "last" : lambda *args: stack.last(),
+        "pop" : lambda *args: stack.pop(args[0]) if len(args) > 0 else stack.pop(),
+        "top" : lambda *args: stack.top(args[0], args[1]) if len(args) > 1 else stack.top(args[0]) if len(args) > 0 else stack.top() }
 
 def main():
 
-    try:
-        scan = raw_input(">>> ")
-    except:
-        print "Something wrong on input"
+    scan = raw_input(">>> ")
 
     if scan == "":
         return 
@@ -83,6 +60,7 @@ def main():
         args = map(float, args)
     except:
         print "Float values only as arguments"
+        return
 
     retval = 0
 
@@ -95,6 +73,7 @@ def main():
         if name == cmd:
             try:
                 func(stack.stack, *args)
+                stack.last()
             except:
                 "Not able to execute this operation"
             break
