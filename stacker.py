@@ -5,6 +5,7 @@ lib_path = os.path.abspath(os.path.join('ext'))
 sys.path.append(lib_path)
 
 import stack
+import smath
 
 ext = {}
 running = 1
@@ -38,13 +39,102 @@ def import_(*args):
 
 # basic commands
 
-cmds = {"exit" : exit_,
-        "import" : import_,
-        "push" : lambda *args: stack.push(*args),
-        "ls" : lambda *args: stack.ls(),
-        "last" : lambda *args: stack.last(),
-        "pop" : lambda *args: stack.pop(args[0]) if len(args) > 0 else stack.pop(),
-        "top" : lambda *args: stack.top(args[0], args[1]) if len(args) > 1 else stack.top(args[0]) if len(args) > 0 else stack.top() }
+cmds = {"exit" : (0, str, exit_),
+        "import" : (1, str, import_),
+	"push" : (-1, float, lambda x: stack.stack.append(x)),
+        "ls" : (0, str, stack.ls),
+        "last" : (1, int, stack.last),
+        "pop" : (1, int, stack.pop),
+        "top" : (2, int, stack.top) }
+
+# basic operations
+
+opers = {   "+" : smath.add,
+            "-" : smath.minus,
+            "*" : smath.mult,
+            "/" : smath.div,
+            "**" : smath.exp }
+
+ext.update(opers)
+
+def split_args(scan):
+
+    out = []
+    tmp = ""
+    split = True
+    subout = []
+
+    for c in scan:
+	if c == ' ' and split:
+	    out.append(tmp)
+	    tmp = ""
+	elif c == '(':
+	    split = False
+	    if tmp == "":
+                subout.append(out.pop())
+            else:
+                subout.append(tmp)
+                tmp = ""
+	elif c == ')':
+	    split = True
+	    subout.append(tmp)
+	    out.append(subout)
+	    subout = []
+	    tmp = ""
+        elif c == ',' and not split:
+	    subout.append(tmp)
+	    tmp = ""
+	else:
+	    tmp += c
+
+    if tmp != "":
+        out.append(tmp)
+
+    return out
+
+def exec_cmd(cmd, *args):
+	
+    for name, struct in cmds.iteritems():
+	if name == cmd:
+	    n = struct[0]
+
+	    if n > 0:
+		try:
+		    args = args[:n]
+		except:
+		    """ nothing """
+
+	    args = map(struct[1], args)
+
+	    try:
+		struct[2](*args)
+	    except:
+		""" nothing """
+
+	    return 1
+
+    return 0
+
+def exec_ext(cmd):
+
+    for name, func in ext.iteritems():
+	if name == cmd:
+	    try:
+		func(stack.stack)
+	    except:
+		print "Not able to execute this operation"
+
+	    stack.last()
+	    return 1
+
+    print "Undefined operation", cmd
+    return 0
+
+def exec_(cmd, *args):
+    if exec_cmd(cmd, *args):
+	    """ nothing """
+    elif exec_ext(cmd):
+	    """ just skipping """
 
 def main():
 
@@ -52,35 +142,23 @@ def main():
 
     if scan == "":
         return 
+		
+    args = split_args(scan)
 
-    args = scan.split()
-    cmd = args.pop(0)
+    for arg in args:
+	if type(arg) is str:
 
-    try:
-        args = map(float, args)
-    except:
-        print "Float values only as arguments"
-        return
+            if arg == "":
+                continue
+            
+	    try:
+		x = float(arg)
+		stack.stack.append(x)
+	    except:
+		exec_(arg)
+	elif type(arg) is list:
+	    exec_(arg[0], *arg[1])
 
-    retval = 0
-
-    for name, func in cmds.iteritems():
-        if name == cmd:
-            func(*args)
-            return
-
-    for name, func in ext.iteritems():
-        if name == cmd:
-            try:
-                func(stack.stack, *args)
-                stack.last()
-            except:
-                "Not able to execute this operation"
-            break
-
-# import standard math module
-
-import_("smath")
 
 while(running):
     main()

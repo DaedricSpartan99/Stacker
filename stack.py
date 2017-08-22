@@ -5,6 +5,7 @@ def push(*varargs):
     for var in varargs:
         stack.append(var)
 
+
 def last():
     ind = len(stack) - 1
     if ind > -1:
