@@ -6,28 +6,32 @@ sys.path.append(lib_path)
 
 import stack
 import smath
+import readline
 
 ext = {}
 running = 1
 
 # commands functions
 
-def exit_(*args):
+def help_():
+    f = open("readme.txt", "r")
+    for line in f.readlines():
+        print line[:-1]
+    f.close()
+
+def exit_():
     global running
     running = 0
 
-def import_(*args):
-    
-    if len(args) < 1:
-        return
+def import_(arg):
 
     global ext
 
     try:
-        __import__(args[0])
-        imp = sys.modules[args[0]]
+        __import__(arg)
+        imp = sys.modules[arg]
     except KeyError:
-        print "Imported module", args[0], "doesn't exist"
+        print "Imported module", arg, "doesn't exist"
         return
         
     vars_ = dir(imp)
@@ -40,6 +44,7 @@ def import_(*args):
 # basic commands
 
 cmds = {"exit" : (0, str, exit_),
+        "help" : (0, str, help_),
         "import" : (1, str, import_),
 	"push" : (-1, float, lambda x: stack.stack.append(x)),
         "ls" : (0, str, stack.ls),
@@ -53,9 +58,27 @@ opers = {   "+" : smath.add,
             "-" : smath.minus,
             "*" : smath.mult,
             "/" : smath.div,
-            "**" : smath.exp }
+            "**" : smath.exp,
+            "%" : smath.mod }
 
 ext.update(opers)
+
+def complete(text, state):
+    for cmd in cmds.keys():
+        if cmd.startswith(text):
+            if not state:
+                return cmd
+            else:
+                state -= 1
+    for cmd in ext.keys():
+        if cmd.startswith(text):
+            if not state:
+                return cmd
+            else:
+                state -= 1
+
+readline.parse_and_bind("tab: complete")
+readline.set_completer(complete)
 
 def split_args(scan):
 
@@ -157,7 +180,7 @@ def main():
 	    except:
 		exec_(arg)
 	elif type(arg) is list:
-	    exec_(arg[0], *arg[1])
+	    exec_(arg[0], *arg[1:])
 
 
 while(running):

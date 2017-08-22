@@ -43,3 +43,12 @@ def exp(stack, *args):
     x = stack.pop()
     y = stack.pop()
     stack.append(y**x)
+
+def mod(stack):
+
+    if len(stack) < 2:
+        raise BufferError
+
+    x = stack.pop()
+    y = stack.pop()
+    stack.append(y % x)
